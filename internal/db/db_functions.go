@@ -33,9 +33,9 @@ func GetNumByID(client *supabase.Client, id string) ([]uint8, error) {
 	return data, nil
 }
 
-func ToggleNumByID(client *supabase.Client, id string) string {
+func ToggleNumByID(client *supabase.Client, id int) string {
 	params := map[string]interface{}{
-		"num_id": 1,
+		"num_id": id,
 	}
 
 	res := client.Rpc("toggle_num_checked", "", params)

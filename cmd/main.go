@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -26,7 +27,17 @@ func main() {
 
 func handleToggle(client *supabase.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, db.ToggleNumByID(client, "1"))
+		type ResponseStruct struct {
+			Id int `json:"id"`
+		}
+		var body ResponseStruct
+		err := json.NewDecoder(r.Body).Decode(&body)
+		if err != nil {
+			http.Error(w, "Error reading body.", http.StatusBadRequest)
+			return
+		}
+
+		fmt.Fprint(w, db.ToggleNumByID(client, body.Id))
 	}
 }
 
