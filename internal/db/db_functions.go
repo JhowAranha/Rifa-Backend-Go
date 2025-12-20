@@ -23,3 +23,21 @@ func GetNums(client *supabase.Client) ([]uint8, error) {
 
 	return data, nil
 }
+
+func GetNumByID(client *supabase.Client, id string) ([]uint8, error) {
+	data, _, err := client.From("numero").Select("*", "exact", false).Eq("id", id).Execute()
+	if err != nil {
+		return nil, err
+	}
+
+	return data, nil
+}
+
+func ToggleNumByID(client *supabase.Client, id string) string {
+	params := map[string]interface{}{
+		"num_id": 1,
+	}
+
+	res := client.Rpc("toggle_num_checked", "", params)
+	return res
+}
