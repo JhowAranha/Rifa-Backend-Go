@@ -9,11 +9,34 @@ import (
 	"github.com/supabase-community/supabase-go"
 )
 
+func enableCORS(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Permite qualquer origem (em produção, substitua pelo seu domínio)
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+
+		// Permite os métodos que você vai usar
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, OPTIONS")
+
+		// Permite os headers que o front-end costuma enviar
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		// Importante: Trata a requisição de "preflight" (o navegador envia um OPTIONS antes do PATCH/POST)
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 func main() {
 	client, err := db.CreateNewConnection()
 	if err != nil {
 		fmt.Print("Erro ao criar nova conexão com o banco de dados: ", err)
 	}
+
+	db.AddNewUser(client)
 
 	mux := http.NewServeMux()
 
@@ -22,7 +45,7 @@ func main() {
 	mux.HandleFunc("GET /nums/{id}", handleGetNumByID(client))
 
 	fmt.Println("Server is running on http://localhost:3000")
-	http.ListenAndServe("127.0.0.1:3000", mux)
+	http.ListenAndServe("127.0.0.1:3000", enableCORS(mux))
 }
 
 func handleToggle(client *supabase.Client) http.HandlerFunc {
