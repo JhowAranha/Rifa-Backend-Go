@@ -9,10 +9,10 @@ import (
 )
 
 func CreateNewConnection() (*supabase.Client, error) {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("Erro ao carregar arquivo .env: %v", err)
-	}
+	_ = godotenv.Load()
+	// if err != nil {
+	// 	log.Fatalf("Erro ao carregar arquivo .env: %v", err)
+	// }
 
 	client, error := supabase.NewClient(
 		os.Getenv("SUPABASE_URL"),
