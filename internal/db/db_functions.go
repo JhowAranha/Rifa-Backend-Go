@@ -1,6 +1,7 @@
 package db
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/JhowAranha/Rifa-Backend-Go/internal/hash"
@@ -52,8 +53,7 @@ func ToggleNumByID(client *supabase.Client, id int) string {
 func AddNewUser(client *supabase.Client) ([]uint8, error) {
 	passwordHash, err := hash.CreateNewHash("admin123")
 	if err != nil {
-		fmt.Println(err)
-		return nil, nil
+		return nil, err
 	}
 
 	data, _, errI := client.From("users").Insert(UserDB{
@@ -62,10 +62,29 @@ func AddNewUser(client *supabase.Client) ([]uint8, error) {
 		Role:     "admin",
 	}, true, "id", "representation", "exact").Execute()
 
-	if errI != nil {
-		fmt.Println("Erro ao inserir usuário no banco de dados: ", err)
-		return nil, nil
+	return data, errI
+}
+
+func Login(client *supabase.Client, username string, password string) (bool, error) {
+	data, _, err := client.From("users").Select("password", "exact", false).
+		Eq("username", username).Execute()
+	if err != nil {
+		return false, err
 	}
 
-	return data, nil
+	type passwordStruct struct {
+		Password string `json:"password"`
+	}
+
+	var passwordData []passwordStruct
+
+	err = json.Unmarshal(data, &passwordData)
+
+	if len(passwordData) > 0 {
+		compare := hash.CheckPassword(password, passwordData[0].Password)
+
+		return compare, err
+	}
+
+	return false, err
 }

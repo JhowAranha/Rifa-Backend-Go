@@ -36,13 +36,12 @@ func main() {
 		fmt.Print("Erro ao criar nova conexão com o banco de dados: ", err)
 	}
 
-	db.AddNewUser(client)
-
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("POST /toggle", handleToggle(client))
 	mux.HandleFunc("GET /nums", handleGetNums(client))
 	mux.HandleFunc("GET /nums/{id}", handleGetNumByID(client))
+	mux.HandleFunc("POST /login", handleLogin(client))
 
 	fmt.Println("Server is running on http://localhost:3000")
 	http.ListenAndServe("127.0.0.1:3000", enableCORS(mux))
@@ -50,10 +49,10 @@ func main() {
 
 func handleToggle(client *supabase.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		type ResponseStruct struct {
+		type responseStruct struct {
 			Id int `json:"id"`
 		}
-		var body ResponseStruct
+		var body responseStruct
 		err := json.NewDecoder(r.Body).Decode(&body)
 		if err != nil {
 			http.Error(w, "Error reading body.", http.StatusBadRequest)
@@ -87,5 +86,32 @@ func handleGetNumByID(client *supabase.Client) http.HandlerFunc {
 		}
 
 		w.Write(num)
+	}
+}
+
+func handleLogin(client *supabase.Client) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+
+		type responseStruct struct {
+			Username string `json:"username"`
+			Password string `json:"password"`
+		}
+
+		var body responseStruct
+
+		err := json.NewDecoder(r.Body).Decode(&body)
+		if err != nil {
+			http.Error(w, "Error reading body.", http.StatusBadRequest)
+			return
+		}
+
+		password, err := db.Login(client, body.Username, body.Password)
+		if err != nil {
+			http.Error(w, "Erro ao  buscar senha por username: admin", http.StatusBadRequest)
+			return
+		}
+
+		fmt.Fprint(w, password)
 	}
 }
