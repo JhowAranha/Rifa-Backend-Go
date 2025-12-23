@@ -44,7 +44,7 @@ func main() {
 	mux.HandleFunc("POST /login", handleLogin(client))
 
 	fmt.Println("Server is running on http://localhost:3000")
-	http.ListenAndServe("127.0.0.1:3000", enableCORS(mux))
+	http.ListenAndServe(":8080", enableCORS(mux))
 }
 
 func handleToggle(client *supabase.Client) http.HandlerFunc {
